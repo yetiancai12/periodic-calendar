@@ -1,0 +1,10 @@
+{
+  "id": "kept-calendar",
+  "name": "Kept Calendar",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Open daily, weekly, monthly, quarterly, and yearly notes from a sidebar calendar that keeps your existing folders and formats.",
+  "author": "yetiancai12",
+  "authorUrl": "https://github.com/yetiancai12",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install, test, and build
+        run: |
+          npm ci
+          npm test
+          npm run build
+      - name: Require a version tag that matches the manifest
+        run: |
+          test -f main.js
+          test -f manifest.json
+          test -f styles.css
+          node <<'NODE'
+          const fs = require("fs");
+          const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+          const tag = process.env.GITHUB_REF.replace("refs/tags/", "");
+          if (!/^\d+\.\d+\.\d+$/.test(manifest.version)) {
+            console.error("manifest version must be x.y.z");
+            process.exit(1);
+          }
+          if (tag !== manifest.version) {
+            console.error(`Tag ${tag} does not match manifest version ${manifest.version}. Tag the commit as ${manifest.version}.`);
+            process.exit(1);
+          }
+          if (manifest.isDesktopOnly !== false) {
+            console.error("isDesktopOnly must be false");
+            process.exit(1);
+          }
+          NODE
+      - name: Publish release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          gh release create "$tag" \
+            --title="$tag" \
+            --generate-notes \
+            main.js manifest.json styles.css
